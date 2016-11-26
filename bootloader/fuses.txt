@@ -1,0 +1,17 @@
+-U lfuse:w:0xFF:m
+	Ext crystal oscillator, frequency 8.0- MHz, Start-up time 16K CK + 65 ms, 
+-U hfuse:w:0xD8:m
+	Boot flash size 2048 words, start addres 0x3800
+	Boot reset vector enabled
+	Serial program downloading (SPI) enabled
+-U efuse:w:0xF0:m
+	Brown-out detection 4.3 V
+	Hardware boot enabled
+-U lock:w:0xEF:m
+	Bootloader protection mode 2: SPM prohibited in bootloader section
+
+
+# Will make uploads seem to fail since result cant be verified by reading from app section
+-U lock:w:0xE7:m
+	Bootloader protection mode 2: SPM prohibited in bootloader section
+	Application protection mode 4: LPM prohibited in application section
