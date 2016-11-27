@@ -12,7 +12,7 @@ const int blinkDelay = 500;
 const int authDelay = 2000;
 const int tagDelay = 1000;
 const int loopDelay = 1000;
-const byte masterUID[] = {0x66, 0xC7, 0xDC, 0x48};
+const byte masterUID[] = {0xFF, 0xFF, 0xFF, 0xFF};
 const char password[] = "SUPER SECRET PASSWORD\n";
 
 unsigned long actExpirationTime;
