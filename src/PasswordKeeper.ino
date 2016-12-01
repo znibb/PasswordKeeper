@@ -12,7 +12,7 @@ const int blinkDelay = 500;
 const int authDelay = 2000;
 const int tagDelay = 1000;
 const int loopDelay = 1000;
-const byte masterUID[] = {0x66, 0xC7, 0xDC, 0x48};
+const byte masterUID[] = {0xFF, 0xFF, 0xFF, 0xFF};
 const char password[] = "SUPER SECRET PASSWORD\n";
 
 unsigned long actExpirationTime;
@@ -65,7 +65,7 @@ void loop(){
 
   if(checkPair(masterUID, readUID)){
     Serial.println("Authorized");
-    //Keyboard.print(password);
+    Keyboard.print(password);
     enableLed(ACT_LED_PIN, authDelay);
   }
   else{
@@ -77,8 +77,6 @@ void loop(){
 
 boolean buttonState(String button){
   if(button.compareTo(BUTTON_PIN) == 0){
-    Serial.println(PINE);
-    Serial.println(PINE & B00000100);
     if(PINE & B00000100 == 4){
       Serial.println("Button not pressed");
       return true;
