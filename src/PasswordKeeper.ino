@@ -30,6 +30,7 @@ void setup(){
   Serial.begin(115200);
   SPI.begin();
   rfid.PCD_Init();
+  rfid.PCD_SetAntennaGain(rfid.RxGain_max);
 
   pinMode(ACT_LED_PIN, OUTPUT);
   pinMode(TAG_LED_PIN, OUTPUT);
@@ -77,8 +78,8 @@ void loop(){
 
 boolean buttonState(String button){
   if(button.compareTo(BUTTON_PIN) == 0){
-    if(PINE & B00000100 == 4){
-      Serial.println("Button not pressed");
+    if((PINE & B00000100) == 0){
+      Serial.println("Button pressed");
       return true;
     }
     else{
