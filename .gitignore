@@ -5,3 +5,5 @@
 bootloader/low_fuse_val.hex
 bootloader/high_fuse_val.hex
 bootloader/ext_fuse_val.hex
+.pioenvs
+.piolibdeps
