@@ -15,19 +15,23 @@ const int blinkDelay = 500;
 const int authDelay = 2000;
 const int tagDelay = 1000;
 const int loopDelay = 1000;
-const int tagsSize = 10;
+const byte uid_size = 7;        // MAKE SURE THESE MATCH loadData VALUES
+const byte password_size = 30;  // MAKE SURE THESE MATCH loadData VALUES
+const byte tagsSize = 10;       // Make sure this is big enough to hold all tags
 
 // Variables
 unsigned long actExpirationTime;
 unsigned long tagExpirationTime;
-
-// Create variables for storing loaded user info
-struct tagData{
-  byte uid[7];
-  char password[30];
-};
-struct tagData tags[tagsSize];
 byte nbrOfTags;
+
+// Struct defining uid/password pair
+struct tagData{
+  byte uid[uid_size];
+  char password[password_size];
+};
+
+// Create array of tagData structs for storing loaded user info
+struct tagData tags[tagsSize];
 
 // Initialize RFID reader object
 MFRC522 rfid(SS_PIN, RST_PIN);
