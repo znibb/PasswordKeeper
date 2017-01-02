@@ -1,6 +1,7 @@
 #include <Arduino.h>
-#include <MFRC522.h>
+#include <EEPROM.h>
 #include <Keyboard.h>
+#include <MFRC522.h>
 
 // Pin definitions
 #define RST_PIN 4
@@ -9,27 +10,24 @@
 #define TAG_LED_PIN 13
 #define BUTTON_PIN "PE2"
 
-// Credential storage
-struct tagData{
-  byte uid[7];
-  char password[30];
-};
-struct tagData tags[] = {
-  {{0xFF, 0xFF, 0xFF, 0xFF},                    "test1\n"},
-  {{0xFE, 0xFE, 0xFE, 0xFE},                    "test2\n"},
-  {{0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD},  "test3\n"}
-};
-const byte nbrOfTags = sizeof(tags)/sizeof(tagData);
-
 // Parameters
 const int blinkDelay = 500;
 const int authDelay = 2000;
 const int tagDelay = 1000;
 const int loopDelay = 1000;
+const int tagsSize = 10;
 
 // Variables
 unsigned long actExpirationTime;
 unsigned long tagExpirationTime;
+
+// Create variables for storing loaded user info
+struct tagData{
+  byte uid[7];
+  char password[30];
+};
+struct tagData tags[tagsSize];
+byte nbrOfTags;
 
 // Initialize RFID reader object
 MFRC522 rfid(SS_PIN, RST_PIN);
@@ -56,6 +54,25 @@ void setup(){
   pinMode(ACT_LED_PIN, OUTPUT);
   pinMode(TAG_LED_PIN, OUTPUT);
   DDRE &= B11111011;  // Set PE2 as input
+
+  // Load user data from EEPROM
+  int memAddr = 0;
+  EEPROM.get(memAddr, nbrOfTags);
+  if(nbrOfTags > tagsSize){
+    Serial.print("Number of loaded entries (");
+    Serial.print(nbrOfTags);
+    Serial.print(") exceeds size of 'tags' container (");
+    Serial.print(tagsSize);
+    Serial.println("). Increase size!");
+    return;
+  }
+  else{
+    memAddr += sizeof(nbrOfTags);
+    EEPROM.get(memAddr, tags);
+    Serial.print("Loaded ");
+    Serial.print(nbrOfTags);
+    Serial.println(" tags.");
+  }
 
   // Flash leds to indicate end of setup
   flashLeds(2);
