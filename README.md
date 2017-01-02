@@ -1,6 +1,6 @@
 # PasswordKeeper
-## About
 Ever gotten tired manually inputing your password everytime you unlock your desktop? PasswordKeeper let's you use a RFID/NFC tag to input a password into your computer!
+## About
 
 The device consists of a custom designed circuit that uses an Atmega32u4 MCU to interface a MFRC522 contactless reader to any computer by emulating a keyboard over a USB connection, no driver or external software required!
 
