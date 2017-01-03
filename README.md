@@ -9,7 +9,7 @@ The device stores a list of tags with an assoiciated password in the EEPROM of t
 ## Usage
 ### Store user credentials
 1. Download the loadData sketch from: https://github.com/znibb/PasswordKeeper_loadData/.
-2. Copy *.ino.template to *.ino
+2. Copy `src/PasswordKeeper_loadData.ino.template` to `src/PasswordKeeper_loadData.ino`.
 3. Edit loadData sketch with appropriate user credentials.
 4. Upload loadData sketch.
 5. Open a serial connection to the device to initialize the writing to EEPROM and to get feedback on the results.
