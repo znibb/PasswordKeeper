@@ -2,8 +2,8 @@
 .clang_complete
 .gcc-flags.json
 .piolibdeps
-bootloader/low_fuse_val.hex
-bootloader/high_fuse_val.hex
-bootloader/ext_fuse_val.hex
+bootloader/low_fuse_val.txt
+bootloader/high_fuse_val.txt
+bootloader/ext_fuse_val.txt
 .pioenvs
 .piolibdeps
