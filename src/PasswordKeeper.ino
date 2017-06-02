@@ -2,6 +2,9 @@
 #include <EEPROM.h>
 #include <Keyboard.h>
 #include <MFRC522.h>
+#include <TagData.h>
+
+//#define DEBUG
 
 // Pin definitions
 #define RST_PIN 4
@@ -15,23 +18,16 @@ const int blinkDelay = 500;
 const int authDelay = 2000;
 const int tagDelay = 1000;
 const int loopDelay = 1000;
-const byte uid_size = 7;        // MAKE SURE THESE MATCH loadData VALUES
-const byte password_size = 30;  // MAKE SURE THESE MATCH loadData VALUES
-const byte tagsSize = 10;       // Make sure this is big enough to hold all tags
 
 // Variables
 unsigned long actExpirationTime;
 unsigned long tagExpirationTime;
-byte nbrOfTags;
+byte nbr_of_tags;
+byte uid_size;
+byte pwd_size;
 
-// Struct defining uid/password pair
-struct tagData{
-  byte uid[uid_size];
-  char password[password_size];
-};
-
-// Create array of tagData structs for storing loaded user info
-struct tagData tags[tagsSize];
+// Object for containing user data
+TagData userData;
 
 // Initialize RFID reader object
 MFRC522 rfid(SS_PIN, RST_PIN);
@@ -47,6 +43,11 @@ void setup(){
   // Init serial port
   Serial.begin(115200);
 
+  #ifdef DEBUG
+  // Wait for  serial port to start so no printouts are missed
+  while(!Serial);
+  #endif
+
   // Init RFID reader
   SPI.begin();
   rfid.PCD_Init();
@@ -59,24 +60,57 @@ void setup(){
   pinMode(TAG_LED_PIN, OUTPUT);
   DDRE &= B11111011;  // Set PE2 as input
 
+  // Load user meta data from EEPROM
+  nbr_of_tags = EEPROM.read(0);
+  uid_size    = EEPROM.read(1);
+  pwd_size    = EEPROM.read(2);
+
+  // Initialize data storage object
+  userData = TagData(nbr_of_tags, uid_size, pwd_size);
+
   // Load user data from EEPROM
-  int memAddr = 0;
-  EEPROM.get(memAddr, nbrOfTags);
-  if(nbrOfTags > tagsSize){
-    Serial.print("Number of loaded entries (");
-    Serial.print(nbrOfTags);
-    Serial.print(") exceeds size of 'tags' container (");
-    Serial.print(tagsSize);
-    Serial.println("). Increase size!");
-    return;
+  int memAddr = 3;  // User data starts at the 4th byte (index 3)
+  // Parse one uid/pwd pair at a time
+  for(int i = 0; i < nbr_of_tags; i++){
+    // Parse uid
+    byte uid[uid_size];
+    for(int j = 0; j < uid_size; j++){
+      uid[j] = EEPROM.read(memAddr);
+      memAddr++;
+    }
+    userData.tags[i].setUid(uid);
+
+    // Parse password
+    char pwd[pwd_size];
+    for(int j = 0; j < pwd_size; j++){
+      pwd[j] = EEPROM.read(memAddr);
+      memAddr++;
+    }
+    userData.tags[i].setPwd(pwd);
   }
-  else{
-    memAddr += sizeof(nbrOfTags);
-    EEPROM.get(memAddr, tags);
-    Serial.print("Loaded ");
-    Serial.print(nbrOfTags);
-    Serial.println(" tags.");
+  Serial.print("Loaded ");
+  Serial.print(nbr_of_tags);
+  Serial.println(" tags.");
+
+//=============================================
+  #ifdef DEBUG
+  // Dump all retrieved data to Serial
+  byte uid[uid_size];
+  char pwd[pwd_size];
+
+  for(int i = 0; i < nbr_of_tags; i++){
+    userData.tags[i].getUid(uid);
+    for(int j = 0; j < uid_size; j++){
+      Serial.print(uid[j] < 0x10 ? " 0" : " ");
+      Serial.print(uid[j], HEX);
+    }
+    Serial.print(" - ");
+
+    userData.tags[i].getPwd(pwd);
+    Serial.print(pwd);
   }
+  #endif
+//=============================================
 
   // Flash leds to indicate end of setup
   flashLeds(2);
@@ -111,18 +145,17 @@ void loop(){
 
   // Check if read uid matches any of the known tags
   bool match = false;
-  byte index;
-  for(byte i = 0; i < nbrOfTags; i++){
-    if(checkPair(tags[i].uid, readUID)){
-      match = true;
-      index = i;
-    }
+  char index = userData.getIndexOf(readUID, rfid.uid.size);
+  if(index >= 0){
+    match = true;
   }
 
   // If tag is known output the corresponding password and blink ACT LED
   if(match){
     Serial.println("Authorized");
-    Keyboard.print(tags[index].password);
+    char pwd[pwd_size];
+    userData.tags[index].getPwd(pwd);
+    Keyboard.print(pwd);
     enableLed(ACT_LED_PIN, authDelay);
   }
   else{
@@ -144,22 +177,6 @@ boolean buttonState(String button){
     else{
       return false;
     }
-  }
-  else{
-    return false;
-  }
-}
-
-// Compare two byte arrays
-boolean checkPair(byte a[], byte b[]){
-  boolean match = true;
-  for(byte i = 0; i < rfid.uid.size; i++){
-    if(a[i] != b[i]){
-      match = false;
-    }
-  }
-  if(match){
-    return true;
   }
   else{
     return false;
@@ -195,10 +212,10 @@ void flashLeds(byte count){
 // Check if any of the LEDs have passed their duration and should be turned off
 void ledHandler(){
   unsigned long currentTime = millis();
-  if(digitalRead(ACT_LED_PIN) && currentTime >= actExpirationTime){
+  if(digitalRead(ACT_LED_PIN) == HIGH && currentTime >= actExpirationTime){
     digitalWrite(ACT_LED_PIN, LOW);
   }
-  if(digitalRead(TAG_LED_PIN) && currentTime >= tagExpirationTime){
+  if(digitalRead(TAG_LED_PIN) == HIGH && currentTime >= tagExpirationTime){
     digitalWrite(TAG_LED_PIN, LOW);
   }
 }
