@@ -1,5 +1,7 @@
+.pioenvs
 .clang_complete
 .gcc-flags.json
+.piolibdeps
 bootloader/low_fuse_val.txt
 bootloader/high_fuse_val.txt
 bootloader/ext_fuse_val.txt
